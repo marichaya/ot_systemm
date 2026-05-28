@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>กรอกข้อมูล OT</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#F1F5F9;color:#1E293B}
+nav{background:#1E293B;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:58px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.brand{font-size:16px;font-weight:700}
+.nav-r{display:flex;align-items:center;gap:12px}
+.badge{background:#2563EB;padding:4px 14px;border-radius:20px;font-size:13px;font-weight:600}
+.logout{color:#F87171;text-decoration:none;font-size:13px;padding:5px 12px;border:1px solid #F87171;border-radius:6px;transition:all .2s}
+.logout:hover{background:#F87171;color:#fff}
+.wrap{max-width:820px;margin:32px auto;padding:0 20px}
+h2{font-size:22px;font-weight:700;margin-bottom:6px}
+.sub{color:#64748B;margin-bottom:24px;font-size:14px}
+.card{background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.08);padding:28px}
+.topbar{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding-bottom:22px;border-bottom:2px solid #F1F5F9;margin-bottom:22px}
+.field{display:flex;align-items:center;gap:10px}
+.field label{font-weight:600;font-size:14px;color:#374151;white-space:nowrap}
+.field input,.field select{border:2px solid #CBD5E1;border-radius:8px;padding:9px 13px;font-size:14px;font-family:inherit;outline:none;color:#1E293B;background:#fff;transition:border-color .2s}
+.field input:focus,.field select:focus{border-color:#2563EB}
+.field input[readonly]{background:#F8FAFC;color:#64748B}
+.btn{padding:9px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s}
+.btn-gray{background:#F1F5F9;color:#475569;border:2px solid #CBD5E1}
+.btn-gray:hover{background:#E2E8F0}
+.btn-blue{background:#2563EB;color:#fff}
+.btn-blue:hover{background:#1D4ED8}
+.btn-outline{background:transparent;color:#475569;border:2px solid #CBD5E1}
+.btn-outline:hover{background:#F8FAFC}
+.msg{padding:12px 16px;border-radius:8px;font-size:14px;margin-bottom:18px;display:none}
+.ok{background:#F0FDF4;color:#15803D;border:1px solid #BBF7D0}
+.er{background:#FEF2F2;color:#DC2626;border:1px solid #FECACA}
+.inf{background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE}
+.tbl-wrap{border-radius:10px;overflow:hidden;border:2px solid #E2E8F0;margin-bottom:20px}
+table{width:100%;border-collapse:collapse}
+thead th{background:#1E293B;color:#fff;padding:13px 16px;font-size:14px;font-weight:600;text-align:center}
+thead th:first-child{text-align:left;padding-left:20px}
+tbody tr:nth-child(odd){background:#fff}
+tbody tr:nth-child(even){background:#F8FAFC}
+tbody tr:hover{background:#EFF6FF;transition:background .15s}
+tbody td{padding:9px 12px;border-bottom:1px solid #F1F5F9;text-align:center;vertical-align:middle}
+tbody td:first-child{text-align:left;padding-left:20px;font-weight:700;font-size:15px;color:#1E293B}
+tfoot td{background:#1E293B;color:#fff;padding:13px 16px;font-weight:700;font-size:15px;text-align:center}
+tfoot td:first-child{text-align:left;padding-left:20px}
+
+/* ── ช่องกรอกเลข ── */
+.n{
+  width:90px; height:42px;
+  font-size:17px; font-weight:700; font-family:inherit;
+  text-align:center; color:#1E293B;
+  background:#fff; border:2px solid #CBD5E1;
+  border-radius:8px; outline:none;
+  padding:0 6px;
+  cursor:text;
+  -webkit-appearance:textfield;
+  appearance:textfield;
+  pointer-events:auto;
+  position:relative; z-index:1;
+}
+.n:hover{border-color:#94A3B8;background:#FAFAFA}
+.n:focus{border-color:#2563EB;background:#EFF6FF;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+.n.ot-input{border-color:#86EFAC}
+.n.ot-input:focus{border-color:#16A34A;box-shadow:0 0 0 3px rgba(22,163,74,.15)}
+
+.row-sum{font-size:16px;font-weight:800;color:#1E293B}
+.actions{display:flex;justify-content:flex-end;gap:12px}
+.ot-green{color:#16A34A}
+.no-red{color:#DC2626}
+</style>
+</head>
+<body>
+<nav>
+  <div class="brand">🏭 ระบบบันทึก OT</div>
+  <div class="nav-r">
+    <span class="badge">{{ session.get('display_name','') }}</span>
+    <a href="/logout" class="logout">ออกจากระบบ</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h2>📝 บันทึกข้อมูล OT</h2>
+  <p class="sub">กรอกจำนวนคนทำ OT และไม่ทำ OT แยกตามสายรถ แล้วกด บันทึกข้อมูล</p>
+
+  <div class="card">
+    <div class="topbar">
+      <div class="field">
+        <label>📅 วันที่</label>
+        <input type="date" id="rec-date" value="{{ today }}">
+      </div>
+      <div class="field">
+        <label>🏭 แผนก</label>
+        {% if user_dept %}
+          <input type="text" value="{{ user_dept }}" readonly>
+          <input type="hidden" id="dept" value="{{ user_dept }}">
+        {% else %}
+          <select id="dept">
+            {% for d in departments %}<option>{{ d }}</option>{% endfor %}
+          </select>
+        {% endif %}
+      </div>
+      <button class="btn btn-gray" onclick="loadData()">📂 โหลดข้อมูลเดิม</button>
+    </div>
+
+    <div id="msg" class="msg"></div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>สายรถ</th>
+            <th>🟢 ทำ OT (คน)</th>
+            <th>🔴 ไม่ทำ OT (คน)</th>
+            <th>รวม</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          {% for line in bus_lines %}
+          {% set i = loop.index %}
+          <tr data-line="{{ line }}" data-idx="{{ i }}">
+            <td>{{ line }}</td>
+            <td style="padding:6px 12px;">
+              <input 
+                     type="number"
+                     id="ot{{ i }}"
+                     name="ot{{ i }}"
+                     class="n ot-input"
+                     min="0" max="9999" step="1"
+                     value="0"
+                     tabindex="{{ i }}"
+                     autocomplete="off"
+                     style="width:90px;height:42px;font-size:17px;font-weight700;text-align:center;border:2px solid #86EFAC;border-radius:8px;background:#fff;outline:none;display:block;margin:0 auto;padding:0 6px;cursor:text;"
+                     oninput="recalc({{ i }})"
+                     onclick="this.select()"
+                     onkeydown="moveNext(event,{{ i }},'ot')">
+            </td>
+            <td style="padding:6px 12px;">
+              <input 
+                     type="number"
+                     id="no{{ i }}"
+                     name="no{{ i }}"
+                     class="n"
+                     min="0" max="9999" step="1"
+                     value="0"
+                     tabindex="{{ i + 100 }}"
+                     autocomplete="off"
+                     style="width:90px;height:42px;font-size:17px;font-weight:700;text-align:center;border:2px solid #CBD5E1;border-radius:8px;background:#fff;outline:none;display:block;margin:0 auto;padding:0 6px;cursor:text;"
+                     oninput="recalc"({{ i }})"
+                     onclick="this.select()"
+                     onkeydown="moveNext(event,{{ i }})", 'no')">"
+            </td>
+            <td class="row-sum" id="sum{{ i }}" style="font-size:16px;font-weight:800;">0</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>รวมทั้งหมด</td>
+            <td class="ot-green" id="tot-ot">0</td>
+            <td class="no-red"   id="tot-no">0</td>
+            <td id="tot-all">0</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-outline" onclick="clearAll()">🗑️ ล้างข้อมูล</button>
+      <button class="btn btn-blue"   onclick="saveData()">💾 บันทึกข้อมูล</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ROWS = {{ bus_lines | length }};
+
+function recalc(i) {
+  const ot  = parseInt(document.getElementById('ot'+i).value) || 0;
+  const no  = parseInt(document.getElementById('no'+i).value) || 0;
+  document.getElementById('sum'+i).textContent = ot + no;
+  recalcTotals();
+}
+
+function recalcTotals() {
+  let tOt=0, tNo=0;
+  for(let i=1;i<=ROWS;i++){
+    tOt += parseInt(document.getElementById('ot'+i).value)||0;
+    tNo += parseInt(document.getElementById('no'+i).value)||0;
+  }
+  document.getElementById('tot-ot').textContent  = tOt;
+  document.getElementById('tot-no').textContent  = tNo;
+  document.getElementById('tot-all').textContent = tOt+tNo;
+}
+
+// กด Tab/Enter ข้ามช่องถัดไปได้
+function moveNext(e, i, col) {
+  if(e.key==='Tab'||e.key==='Enter'){
+    e.preventDefault();
+    let next;
+    if(col==='ot') next=document.getElementById('no'+i);
+    else next=(i<ROWS)?document.getElementById('ot'+(i+1)):document.getElementById('ot1');
+    if(next){ next.focus(); next.select(); }
+  }
+}
+
+async function loadData() {
+  const date=document.getElementById('rec-date').value;
+  const dept=document.getElementById('dept').value;
+  const res=await fetch(`/api/records?date=${date}&department=${encodeURIComponent(dept)}`);
+  const data=await res.json();
+  clearAll(false);
+  const rows=document.querySelectorAll('#tbody tr');
+  data.forEach(r=>{
+    rows.forEach((row,idx)=>{
+      if(row.dataset.line===r.bus_line){
+        const i=parseInt(row.dataset.idx);
+        document.getElementById('ot'+i).value=r.ot_count;
+        document.getElementById('no'+i).value=r.non_ot_count;
+        document.getElementById('sum'+i).textContent=r.ot_count+r.non_ot_count;
+      }
+    });
+  });
+  recalcTotals();
+  showMsg(data.length?`✅ โหลดข้อมูลแล้ว ${data.length} สาย`:'ℹ️ ยังไม่มีข้อมูลในวันนี้',
+          data.length?'ok':'inf');
+}
+
+function clearAll(resetMsg=true){
+  for(let i=1;i<=ROWS;i++){
+    document.getElementById('ot'+i).value=0;
+    document.getElementById('no'+i).value=0;
+    document.getElementById('sum'+i).textContent=0;
+  }
+  recalcTotals();
+  if(resetMsg) hideMsg();
+}
+
+async function saveData(){
+  const date=document.getElementById('rec-date').value;
+  const dept=document.getElementById('dept').value;
+  const records=[];
+  document.querySelectorAll('#tbody tr').forEach((row,idx)=>{
+    const i=idx+1;
+    records.push({
+      bus_line:row.dataset.line,
+      ot_count:    parseInt(document.getElementById('ot'+i).value)||0,
+      non_ot_count:parseInt(document.getElementById('no'+i).value)||0
+    });
+  });
+  const res=await fetch('/api/records',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({date,department:dept,records})
+  });
+  const d=await res.json();
+  showMsg(d.success?'✅ บันทึกข้อมูลเรียบร้อยแล้ว':'❌ '+d.message, d.success?'ok':'er');
+}
+
+function showMsg(text,type){
+  const el=document.getElementById('msg');
+  el.textContent=text; el.className='msg '+type; el.style.display='block';
+  setTimeout(()=>hideMsg(),4000);
+}
+function hideMsg(){ document.getElementById('msg').style.display='none'; }
+
+document.getElementById('rec-date').addEventListener('change', loadData);
+const dEl=document.getElementById('dept');
+if(dEl&&dEl.tagName==='SELECT') dEl.addEventListener('change',loadData);
+
+loadData();
+</script>
+</body>
+</html>
