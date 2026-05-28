@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard HR</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#F1F5F9;color:#1E293B}
+nav{background:#1E293B;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:58px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.brand{font-size:16px;font-weight:700}
+.nav-r{display:flex;align-items:center;gap:12px}
+.badge{background:#2563EB;padding:4px 14px;border-radius:20px;font-size:13px;font-weight:600}
+.logout{color:#F87171;text-decoration:none;font-size:13px;padding:5px 12px;border:1px solid #F87171;border-radius:6px;transition:all .2s}
+.logout:hover{background:#F87171;color:#fff}
+.wrap{max-width:1100px;margin:32px auto;padding:0 20px}
+h2{font-size:22px;font-weight:700;margin-bottom:6px}
+.sub{color:#64748B;margin-bottom:24px;font-size:14px}
+
+.toolbar{background:#fff;border-radius:12px;padding:16px 22px;box-shadow:0 1px 4px rgba(0,0,0,.08);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px}
+.tl{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.field{display:flex;align-items:center;gap:8px}
+.field label{font-weight:600;font-size:14px;white-space:nowrap}
+.field input,.field select{border:2px solid #CBD5E1;border-radius:8px;padding:9px 13px;font-size:14px;font-family:inherit;outline:none;background:#fff;transition:border-color .2s}
+.field input:focus,.field select:focus{border-color:#2563EB}
+.btn{padding:9px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s}
+.btn-blue{background:#2563EB;color:#fff}.btn-blue:hover{background:#1D4ED8}
+.btn-green{background:#16A34A;color:#fff}.btn-green:hover{background:#15803D}
+
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);display:flex;align-items:center;gap:14px;border-left:5px solid #CBD5E1}
+.card.bl{border-left-color:#2563EB}.card.rd{border-left-color:#DC2626}
+.card.gn{border-left-color:#16A34A}.card.or{border-left-color:#D97706}
+.ci{font-size:30px}
+.cv{font-size:30px;font-weight:800;line-height:1}
+.cl{font-size:12px;color:#64748B;margin-top:4px}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.panel{background:#fff;border-radius:12px;padding:22px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.panel.full{grid-column:1/-1}
+.pt{font-size:15px;font-weight:700;margin-bottom:16px}
+
+.tbl-wrap{border-radius:8px;overflow:hidden;border:2px solid #E2E8F0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+thead th{background:#1E293B;color:#fff;padding:12px 16px;font-weight:600;text-align:center}
+thead th:first-child{text-align:left}
+tbody tr:nth-child(odd){background:#fff}
+tbody tr:nth-child(even){background:#F8FAFC}
+tbody tr:hover{background:#EFF6FF}
+tbody td{padding:10px 16px;border-bottom:1px solid #F1F5F9;text-align:center;font-weight:700;font-size:15px}
+tbody td:first-child{text-align:left;font-size:14px;font-weight:500}
+tfoot td{background:#1E293B;color:#fff;padding:12px 16px;font-weight:700;font-size:15px;text-align:center}
+tfoot td:first-child{text-align:left}
+.ot{color:#16A34A}.no{color:#DC2626}
+.faded{opacity:.35}
+.empty{padding:24px;text-align:center;color:#94A3B8;font-style:italic;font-size:14px}
+.sm{font-size:12px;color:#94A3B8;font-weight:400}
+.ic{background:none;border:none;font-size:16px;cursor:pointer;padding:4px 6px;border-radius:6px;transition:background .15s}
+.ic:hover{background:#F1F5F9}
+
+@media(max-width:768px){.cards{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="brand">🏭 ระบบบันทึก OT</div>
+  <div class="nav-r">
+    <span class="badge">{{ session.get('display_name','') }}</span>
+    <a href="/logout" class="logout">ออกจากระบบ</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h2>📊 Dashboard สรุปยอด OT</h2>
+  <p class="sub">ภาพรวมการทำ OT ทุกแผนก คำนวณอัตโนมัติ</p>
+
+  <div class="toolbar">
+    <div class="tl">
+      <div class="field"><label>📅 วันที่</label><input type="date" id="dd" value="{{ today }}"></div>
+      <div class="field">
+        <label>🏭 แผนก</label>
+        <select id="df">
+          <option value="">ทุกแผนก</option>
+          {% for d in departments %}<option>{{ d }}</option>{% endfor %}
+        </select>
+      </div>
+      <button class="btn btn-blue" onclick="load()">🔍 ค้นหา</button>
+    </div>
+    <button class="btn btn-green" onclick="exportXL()">📥 Export Excel</button>
+  </div>
+
+  <div class="cards">
+    <div class="card bl"><div class="ci">👥</div><div><div class="cv" id="c1">0</div><div class="cl">คนทำ OT</div></div></div>
+    <div class="card rd"><div class="ci">🚫</div><div><div class="cv" id="c2">0</div><div class="cl">คนไม่ทำ OT</div></div></div>
+    <div class="card gn"><div class="ci">📊</div><div><div class="cv" id="c3">0</div><div class="cl">รวมทั้งหมด</div></div></div>
+    <div class="card or"><div class="ci">🏭</div><div><div class="cv" id="c4">0</div><div class="cl">แผนกที่บันทึกแล้ว</div></div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <div class="pt">📋 สรุปตามแผนก</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>แผนก</th><th>ทำ OT</th><th>ไม่ทำ OT</th><th>รวม</th></tr></thead>
+          <tbody id="db"></tbody>
+          <tfoot><tr><td>รวมทั้งหมด</td><td class="ot" id="d1">0</td><td class="no" id="d2">0</td><td id="d3">0</td></tr></tfoot>
+        </table>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="pt">🚌 สรุปตามสายรถ</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>สายรถ</th><th>ทำ OT</th><th>ไม่ทำ OT</th><th>รวม</th></tr></thead>
+          <tbody id="lb"></tbody>
+          <tfoot><tr><td>รวม</td><td class="ot" id="l1">0</td><td class="no" id="l2">0</td><td id="l3">0</td></tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel full" id="det" style="display:none">
+    <div class="pt">📑 รายละเอียดข้อมูล</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>แผนก</th><th>สายรถ</th><th>ทำ OT</th><th>ไม่ทำ OT</th><th>บันทึกโดย</th><th>จัดการ</th></tr></thead>
+        <tbody id="detb"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEPTS = {{ departments | tojson }};
+const LINES = {{ bus_lines   | tojson }};
+
+async function load(){
+  const date=document.getElementById('dd').value;
+  const dept=document.getElementById('df').value;
+  const [sum,recs]=await Promise.all([
+    fetch(`/api/summary?date=${date}`).then(r=>r.json()),
+    fetch(`/api/records?date=${date}${dept?'&department='+encodeURIComponent(dept):''}`).then(r=>r.json())
+  ]);
+
+  // Cards
+  let tOt=0,tNo=0,act=0;
+  DEPTS.forEach(d=>{
+    tOt+=sum.departments[d]?.ot||0;
+    tNo+=sum.departments[d]?.non_ot||0;
+    if((sum.departments[d]?.ot||0)+(sum.departments[d]?.non_ot||0)>0) act++;
+  });
+  document.getElementById('c1').textContent=tOt;
+  document.getElementById('c2').textContent=tNo;
+  document.getElementById('c3').textContent=tOt+tNo;
+  document.getElementById('c4').textContent=act;
+
+  // ตารางแผนก
+  let dOt=0,dNo=0;
+  document.getElementById('db').innerHTML=DEPTS.map(d=>{
+    const ot=sum.departments[d]?.ot||0;
+    const no=sum.departments[d]?.non_ot||0;
+    dOt+=ot; dNo+=no;
+    return `<tr class="${ot+no===0?'faded':''}">
+      <td>${d}</td>
+      <td class="ot">${ot}</td>
+      <td class="no">${no}</td>
+      <td>${ot+no}</td></tr>`;
+  }).join('');
+  document.getElementById('d1').textContent=dOt;
+  document.getElementById('d2').textContent=dNo;
+  document.getElementById('d3').textContent=dOt+dNo;
+
+  // ตารางสายรถ
+  let lOt=0,lNo=0;
+  document.getElementById('lb').innerHTML=LINES.map(l=>{
+    const ot=sum.bus_lines[l]?.ot||0;
+    const no=sum.bus_lines[l]?.non_ot||0;
+    lOt+=ot; lNo+=no;
+    return `<tr class="${ot+no===0?'faded':''}">
+      <td>${l}</td>
+      <td class="ot">${ot}</td>
+      <td class="no">${no}</td>
+      <td>${ot+no}</td></tr>`;
+  }).join('');
+  document.getElementById('l1').textContent=lOt;
+  document.getElementById('l2').textContent=lNo;
+  document.getElementById('l3').textContent=lOt+lNo;
+
+  // รายละเอียด
+  const det=document.getElementById('det');
+  const detb=document.getElementById('detb');
+  if(recs.length>0||dept){
+    det.style.display='block';
+    detb.innerHTML=recs.length===0
+      ?'<tr><td colspan="6" class="empty">ไม่พบข้อมูลในวันที่เลือก</td></tr>'
+      :recs.map(r=>`<tr id="r${r.id}">
+          <td>${r.department}</td><td>${r.bus_line}</td>
+          <td class="ot">${r.ot_count}</td>
+          <td class="no">${r.non_ot_count}</td>
+          <td><span class="sm">${r.created_by||'-'}</span></td>
+          <td>
+            <button class="ic" onclick="edit(${r.id},${r.ot_count},${r.non_ot_count})">✏️</button>
+            <button class="ic" onclick="del(${r.id})">🗑️</button>
+          </td></tr>`).join('');
+  } else { det.style.display='none'; }
+}
+
+async function del(id){
+  if(!confirm('ยืนยันการลบข้อมูลนี้?')) return;
+  const r=await fetch(`/api/records/${id}`,{method:'DELETE'});
+  if((await r.json()).success) load();
+}
+async function edit(id,ot,no){
+  const nOt=prompt('จำนวนคนทำ OT:',ot); if(nOt===null) return;
+  const nNo=prompt('จำนวนคนไม่ทำ OT:',no); if(nNo===null) return;
+  const r=await fetch(`/api/records/${id}`,{
+    method:'PUT',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ot_count:parseInt(nOt)||0,non_ot_count:parseInt(nNo)||0})
+  });
+  if((await r.json()).success) load();
+}
+function exportXL(){ window.location.href=`/api/export?date=${document.getElementById('dd').value}`; }
+
+document.getElementById('dd').addEventListener('change',load);
+document.getElementById('df').addEventListener('change',load);
+load();
+</script>
+</body>
+</html>
